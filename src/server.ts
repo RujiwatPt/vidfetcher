@@ -28,7 +28,7 @@ export const app = {
       if (path === '/api/health') {
         return Response.json({
           status: 'ok',
-          uptime: process.uptime(),
+          uptime: typeof process !== 'undefined' && typeof process.uptime === 'function' ? process.uptime() : 0,
           timestamp: new Date().toISOString()
         });
       }
@@ -97,26 +97,28 @@ export const app = {
         return await ProxyService.proxyStream(videoUrl, req, referer, filename, isDownload);
       }
 
-      // 5. Static file serving for Frontend
-      if (path === '/' || path === '/index.html') {
-        const file = Bun.file('./public/index.html');
-        return new Response(file, {
-          headers: { 'Content-Type': 'text/html; charset=utf-8' }
-        });
-      }
+      // 5. Static file serving for Frontend (Bun runtime fallback)
+      if (typeof Bun !== 'undefined' && typeof Bun.file === 'function') {
+        if (path === '/' || path === '/index.html') {
+          const file = Bun.file('./public/index.html');
+          return new Response(file, {
+            headers: { 'Content-Type': 'text/html; charset=utf-8' }
+          });
+        }
 
-      if (path === '/app.css') {
-        const file = Bun.file('./public/app.css');
-        return new Response(file, {
-          headers: { 'Content-Type': 'text/css; charset=utf-8' }
-        });
-      }
+        if (path === '/app.css') {
+          const file = Bun.file('./public/app.css');
+          return new Response(file, {
+            headers: { 'Content-Type': 'text/css; charset=utf-8' }
+          });
+        }
 
-      if (path === '/app.js') {
-        const file = Bun.file('./public/app.js');
-        return new Response(file, {
-          headers: { 'Content-Type': 'application/javascript; charset=utf-8' }
-        });
+        if (path === '/app.js') {
+          const file = Bun.file('./public/app.js');
+          return new Response(file, {
+            headers: { 'Content-Type': 'application/javascript; charset=utf-8' }
+          });
+        }
       }
 
       // 404 Not Found
@@ -128,8 +130,8 @@ export const app = {
   }
 };
 
-// Start server when run directly
-if (import.meta.main) {
+// Start server when run directly under Bun
+if (import.meta.main && typeof Bun !== 'undefined' && typeof Bun.serve === 'function') {
   const server = Bun.serve({
     port: PORT,
     fetch: app.fetch
