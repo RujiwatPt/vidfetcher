@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VideoFetcher - Universal Web Video Stream Extractor</title>
+  <link rel="stylesheet" href="/app.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- HLS.js for direct M3U8 streaming playback in modern browsers -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.8/dist/hls.min.js"></script>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Header -->
+    <header class="navbar">
+      <div class="nav-brand">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>VideoFetcher</h1>
+          <span class="badge version-badge">v1.0</span>
+        </div>
+      </div>
+      <div class="nav-actions">
+        <div id="apiStatus" class="status-indicator">
+          <span class="status-dot"></span>
+          <span class="status-label">Online</span>
+        </div>
+        <button id="themeToggleBtn" class="btn btn-icon" title="Toggle Theme" aria-label="Toggle Theme">
+          <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="container">
+      <!-- Hero / Input Section -->
+      <section class="hero-section">
+        <div class="hero-header">
+          <h2>Find & Extract Video Links From Any Website</h2>
+          <p>Inspects HTML tags, OpenGraph metadata, JSON-LD Schema, inline scripts, HLS manifests (.m3u8), and iframe players.</p>
+        </div>
+
+        <div class="search-box">
+          <form id="fetchForm" class="search-form">
+            <div class="input-wrapper">
+              <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input
+                type="url"
+                id="urlInput"
+                placeholder="Paste any website URL (e.g. https://example.com/watch...)"
+                required
+                autocomplete="off"
+              />
+              <button type="button" id="pasteBtn" class="btn btn-ghost paste-btn" title="Paste from clipboard">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                  <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                </svg>
+                <span>Paste</span>
+              </button>
+            </div>
+            <button type="submit" id="submitBtn" class="btn btn-primary submit-btn">
+              <span class="btn-text">Fetch Videos</span>
+              <span class="spinner" style="display: none;"></span>
+            </button>
+          </form>
+
+          <!-- Quick Samples -->
+          <div class="samples-wrapper">
+            <span class="samples-label">Quick Test Presets:</span>
+            <div class="samples-list">
+              <button class="sample-chip" data-url="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4">Direct MP4 Video</button>
+              <button class="sample-chip" data-url="https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8">HLS Stream (.m3u8)</button>
+              <button class="sample-chip" data-url="https://archive.org/details/BigBuckBunny_124">Archive.org (HTML5 + Meta)</button>
+              <button class="sample-chip" data-url="https://en.wikipedia.org/wiki/Big_Buck_Bunny">Wikipedia (OG + Video)</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- History Bar -->
+      <section id="historySection" class="history-section" style="display: none;">
+        <div class="history-header">
+          <span>Recent lookups:</span>
+          <button id="clearHistoryBtn" class="btn-link">Clear</button>
+        </div>
+        <div id="historyList" class="history-list"></div>
+      </section>
+
+      <!-- Loading State -->
+      <div id="loadingState" class="card loading-card" style="display: none;">
+        <div class="loading-content">
+          <div class="radar-spinner"></div>
+          <div class="loading-text">
+            <h3>Analyzing HTML & Scripts...</h3>
+            <p id="loadingStatusText">Fetching webpage content and executing video detection pipeline</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error State -->
+      <div id="errorState" class="card error-card" style="display: none;">
+        <div class="error-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+        </div>
+        <div class="error-content">
+          <h3 id="errorTitle">Fetch Failed</h3>
+          <p id="errorMessage">Unable to fetch webpage content.</p>
+        </div>
+      </div>
+
+      <!-- Results View -->
+      <section id="resultsSection" class="results-section" style="display: none;">
+        <!-- Page Summary Card -->
+        <div class="card page-summary-card">
+          <div class="summary-header">
+            <div class="page-title-row">
+              <img id="pageFavicon" src="" alt="" class="favicon" onerror="this.style.display='none'">
+              <h2 id="pageTitle" class="page-title">Page Title</h2>
+            </div>
+            <a id="pageLink" href="#" target="_blank" rel="noopener noreferrer" class="final-url-link">
+              <span id="pageFinalUrl">https://...</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+            </a>
+          </div>
+
+          <p id="pageDescription" class="page-description"></p>
+
+          <!-- Statistics Badges -->
+          <div class="stats-grid">
+            <div class="stat-badge">
+              <span class="stat-number" id="statTotal">0</span>
+              <span class="stat-label">Total Videos</span>
+            </div>
+            <div class="stat-badge stat-playable">
+              <span class="stat-number" id="statDirect">0</span>
+              <span class="stat-label">Direct Streams</span>
+            </div>
+            <div class="stat-badge stat-hls">
+              <span class="stat-number" id="statHls">0</span>
+              <span class="stat-label">HLS (.m3u8)</span>
+            </div>
+            <div class="stat-badge stat-embed">
+              <span class="stat-number" id="statEmbeds">0</span>
+              <span class="stat-label">Embeds</span>
+            </div>
+            <div class="stat-badge stat-speed">
+              <span class="stat-number" id="statDuration">0ms</span>
+              <span class="stat-label">Scan Speed</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter / Tabs Row -->
+        <div class="filter-row">
+          <div class="tabs-group">
+            <button class="tab-btn active" data-filter="all">All Videos (<span id="countAll">0</span>)</button>
+            <button class="tab-btn" data-filter="direct">Direct Playable (<span id="countDirect">0</span>)</button>
+            <button class="tab-btn" data-filter="hls">HLS / M3U8 (<span id="countHls">0</span>)</button>
+            <button class="tab-btn" data-filter="embeds">Embeds (<span id="countEmbeds">0</span>)</button>
+            <button class="tab-btn" data-filter="inspector">HTML Inspector</button>
+          </div>
+        </div>
+
+        <!-- Video Candidate Grid -->
+        <div id="videoCardsGrid" class="videos-grid"></div>
+
+        <!-- Raw Inspector Tab Content -->
+        <div id="rawInspectorPanel" class="card inspector-card" style="display: none;">
+          <div class="inspector-header">
+            <h3>Raw HTML Extraction Tracing</h3>
+            <p>Direct view of elements, tags, and script matches found while parsing the webpage HTML.</p>
+          </div>
+          <div class="inspector-tabs">
+            <button class="subtab-btn active" data-subtab="videos">HTML5 Videos (<span id="subtabVideoCount">0</span>)</button>
+            <button class="subtab-btn" data-subtab="meta">Meta Tags (<span id="subtabMetaCount">0</span>)</button>
+            <button class="subtab-btn" data-subtab="jsonld">JSON-LD (<span id="subtabJsonCount">0</span>)</button>
+            <button class="subtab-btn" data-subtab="scripts">Script Matches (<span id="subtabScriptCount">0</span>)</button>
+            <button class="subtab-btn" data-subtab="iframes">Iframes (<span id="subtabIframeCount">0</span>)</button>
+          </div>
+          <div id="inspectorContent" class="inspector-code-block">
+            <pre><code id="inspectorCode">Select a subtab above to view raw inspection trace</code></pre>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Stream Inspection Modal -->
+    <div id="probeModal" class="modal" style="display: none;">
+      <div class="modal-backdrop" id="modalBackdrop"></div>
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h3>Stream Diagnostics & Headers</h3>
+          <button id="closeModalBtn" class="btn-close" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div id="probeLoading" class="modal-loading">
+            <div class="radar-spinner"></div>
+            <p>Probing media headers via HTTP HEAD/RANGE...</p>
+          </div>
+          <div id="probeResults" style="display: none;">
+            <div class="probe-metrics-grid">
+              <div class="probe-metric">
+                <span class="metric-title">HTTP Status</span>
+                <span id="probeStatus" class="metric-value">200 OK</span>
+              </div>
+              <div class="probe-metric">
+                <span class="metric-title">Content Type</span>
+                <span id="probeContentType" class="metric-value">video/mp4</span>
+              </div>
+              <div class="probe-metric">
+                <span class="metric-title">Content Length</span>
+                <span id="probeSize" class="metric-value">--</span>
+              </div>
+              <div class="probe-metric">
+                <span class="metric-title">Range Seeking</span>
+                <span id="probeRanges" class="metric-value">Supported</span>
+              </div>
+            </div>
+            <h4>Response Headers</h4>
+            <div class="headers-code-block">
+              <pre><code id="probeHeadersCode"></code></pre>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="closeModalFooterBtn" class="btn btn-secondary">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast" style="display: none;">
+      <span id="toastMessage">Copied to clipboard!</span>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

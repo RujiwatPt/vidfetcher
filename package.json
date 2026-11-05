@@ -1,0 +1,14 @@
+{
+  "name": "videofetcher",
+  "version": "1.0.0",
+  "description": "Universal Web Video Stream Extractor & Downloader Webapp",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "bun run src/server.ts",
+    "dev": "bun --watch run src/server.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  }
+}
