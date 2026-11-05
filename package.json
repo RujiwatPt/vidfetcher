@@ -1,5 +1,5 @@
 {
-  "name": "videofetcher",
+  "name": "vidfetcher",
   "version": "1.0.0",
   "description": "Universal Web Video Stream Extractor & Downloader Webapp",
   "module": "index.ts",
