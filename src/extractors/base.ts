@@ -121,4 +121,24 @@ export class ExtractorUtils {
     if (height) return `${height}p`;
     return undefined;
   }
+
+  /**
+   * Generates a human-friendly title from a video URL path when no explicit title tag is present.
+   */
+  public static extractTitleFromUrl(url: string, fallback?: string): string {
+    try {
+      const parsed = new URL(url);
+      const filename = parsed.pathname.split('/').filter(Boolean).pop();
+      if (filename) {
+        const withoutExt = decodeURIComponent(filename).replace(/\.[a-zA-Z0-9]+$/, '');
+        const clean = withoutExt.replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim();
+        if (clean.length > 2 && !/^[0-9a-f]{20,}$/i.test(clean)) {
+          return clean.charAt(0).toUpperCase() + clean.slice(1);
+        }
+      }
+    } catch {
+      // Fallback
+    }
+    return fallback || 'Video Stream';
+  }
 }

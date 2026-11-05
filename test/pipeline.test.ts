@@ -96,4 +96,96 @@ describe('VideoExtractionPipeline', () => {
     expect(result.stats.embeds).toBe(1);
     expect(result.stats.scanDurationMs).toBeGreaterThanOrEqual(0);
   });
+
+  it('extracts all videos when a page contains multiple independent video players', async () => {
+    const multiPlayerHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Course Overview - Multiple Lectures</title>
+        <script type="application/ld+json">
+        [
+          {
+            "@type": "VideoObject",
+            "name": "Bonus Lecture: Machine Learning",
+            "contentUrl": "https://cdn.school.org/videos/bonus_ml.mp4"
+          },
+          {
+            "@type": "VideoObject",
+            "name": "Bonus Lecture: Deep Learning",
+            "contentUrl": "https://cdn.school.org/videos/bonus_dl.mp4"
+          }
+        ]
+        </script>
+      </head>
+      <body>
+        <!-- Player 1: Lecture 1 -->
+        <div class="lecture-card">
+          <h3>Lecture 1: Introduction</h3>
+          <video src="/media/lecture1.mp4" title="Lecture 1: Introduction" width="640" height="360"></video>
+        </div>
+
+        <!-- Player 2: Lecture 2 with multi-bitrate sources -->
+        <div class="lecture-card">
+          <h3>Lecture 2: Advanced Topics</h3>
+          <video title="Lecture 2: Advanced Topics">
+            <source src="/media/lecture2_1080p.mp4" type="video/mp4">
+            <source src="/media/lecture2_720p.mp4" type="video/mp4">
+          </video>
+        </div>
+
+        <!-- Player 3: YouTube Guest Speaker -->
+        <div class="guest-card">
+          <iframe src="https://www.youtube.com/embed/guest123abc" title="Guest Speaker Talk"></iframe>
+        </div>
+
+        <!-- Player 4: Vimeo Tutorial -->
+        <div class="tutorial-card">
+          <iframe src="https://player.vimeo.com/video/987654321" title="Vimeo Tutorial"></iframe>
+        </div>
+
+        <!-- Player 5: Live Stream HLS Playlist -->
+        <script>
+          var player = new HlsPlayer({
+            stream: "https://live.school.org/hls/qna_live.m3u8"
+          });
+        </script>
+      </body>
+      </html>
+    `;
+
+    const result = await pipeline.process(
+      multiPlayerHtml,
+      'https://school.org/courses/cs101',
+      'https://school.org/courses/cs101',
+      200
+    );
+
+    // Verify all 8 distinct video URLs are captured:
+    // 1. /media/lecture1.mp4
+    // 2. /media/lecture2_1080p.mp4
+    // 3. /media/lecture2_720p.mp4
+    // 4. YouTube guest123abc
+    // 5. Vimeo 987654321
+    // 6. https://live.school.org/hls/qna_live.m3u8
+    // 7. https://cdn.school.org/videos/bonus_ml.mp4
+    // 8. https://cdn.school.org/videos/bonus_dl.mp4
+    expect(result.videos.length).toBe(8);
+    expect(result.stats.totalFound).toBe(8);
+
+    const urls = result.videos.map((v) => v.url);
+    expect(urls).toContain('https://school.org/media/lecture1.mp4');
+    expect(urls).toContain('https://school.org/media/lecture2_1080p.mp4');
+    expect(urls).toContain('https://school.org/media/lecture2_720p.mp4');
+    expect(urls).toContain('https://live.school.org/hls/qna_live.m3u8');
+    expect(urls).toContain('https://cdn.school.org/videos/bonus_ml.mp4');
+    expect(urls).toContain('https://cdn.school.org/videos/bonus_dl.mp4');
+    expect(urls).toContain('https://www.youtube.com/embed/guest123abc');
+    expect(urls).toContain('https://player.vimeo.com/video/987654321');
+
+    // Verify format breakdown stats
+    expect(result.stats.hlsStreams).toBe(1);
+    expect(result.stats.embeds).toBe(2);
+    expect(result.stats.directPlayable).toBe(6);
+  });
 });

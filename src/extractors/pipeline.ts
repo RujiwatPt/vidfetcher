@@ -235,9 +235,11 @@ export class VideoExtractionPipeline {
 
     const merged = Array.from(map.values());
 
-    // Fall back to page title/thumbnail if candidate is missing them
+    // Fall back to filename or page title if candidate is missing them
     for (const item of merged) {
-      if (!item.title) item.title = metadata.title;
+      if (!item.title) {
+        item.title = ExtractorUtils.extractTitleFromUrl(item.url, metadata.title);
+      }
       if (!item.thumbnail) item.thumbnail = metadata.thumbnail;
     }
 
