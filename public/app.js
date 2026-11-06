@@ -306,12 +306,7 @@
     const sourceLabel = formatSourceLabel(video.sourceType);
 
     // Suggested sanitized filename
-    const cleanTitle = (video.title || 'video')
-      .replace(/[^a-zA-Z0-9_-]/g, '_')
-      .replace(/_+/g, '_')
-      .slice(0, 45);
-    const ext = video.format === 'm3u8' ? 'm3u8' : (video.format === 'webm' ? 'webm' : (video.format === 'mov' ? 'mov' : 'mp4'));
-    const suggestedFilename = `${cleanTitle}.${ext}`;
+    const suggestedFilename = getFilenameForVideo(video);
 
     // Media Player Container HTML
     const mediaContainerId = `player-container-${index}`;
@@ -344,9 +339,9 @@
         <div class="card-actions">
           ${
             video.isDirectStream
-              ? `<a href="/api/proxy?url=${encodeURIComponent(video.url)}&referer=${encodeURIComponent(currentExtractionData?.metadata?.finalUrl || '')}&download=1&filename=${encodeURIComponent(getFilenameForVideo(video))}"
+              ? `<a href="/api/proxy?url=${encodeURIComponent(video.url)}&referer=${encodeURIComponent(currentExtractionData?.metadata?.finalUrl || '')}&download=1&filename=${encodeURIComponent(suggestedFilename)}"
                     class="btn btn-primary download-btn"
-                    download="${escapeHtml(getFilenameForVideo(video))}"
+                    download="${escapeHtml(suggestedFilename)}"
                     title="Download video file via high-speed proxy (bypasses CORS & Referer restrictions)">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -582,6 +577,11 @@
       probeRanges.textContent = data.acceptRanges ? 'Supported (Bytes)' : 'Not Advertised';
       probeRanges.style.color = data.acceptRanges ? 'var(--success)' : 'var(--text-muted)';
 
+      if (modalDownloadBtn && data.contentType) {
+        const ext = data.contentType.includes('mpegurl') ? 'm3u8' : (data.contentType.includes('webm') ? 'webm' : 'mp4');
+        modalDownloadBtn.download = `video.${ext}`;
+      }
+
       probeHeadersCode.textContent = JSON.stringify(data.headers || {}, null, 2);
     } catch (err) {
       probeLoading.style.display = 'none';
@@ -729,6 +729,16 @@
       case 'anchor_link': return 'Direct Link';
       default: return 'Web Extractor';
     }
+  }
+
+  function getFilenameForVideo(video) {
+    if (!video) return 'video.mp4';
+    const cleanTitle = (video.title || 'video')
+      .replace(/[^a-zA-Z0-9_-]/g, '_')
+      .replace(/_+/g, '_')
+      .slice(0, 45);
+    const ext = video.format === 'm3u8' ? 'm3u8' : (video.format === 'webm' ? 'webm' : (video.format === 'mov' ? 'mov' : 'mp4'));
+    return `${cleanTitle || 'video'}.${ext}`;
   }
 
   function escapeHtml(str) {
