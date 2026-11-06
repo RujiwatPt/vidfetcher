@@ -118,7 +118,7 @@ export class JsonLdExtractor implements IExtractor {
             duration,
             confidence: 95,
             context: 'Schema.org JSON-LD VideoObject contentUrl',
-            isDirectStream: format !== 'embed' && format !== 'unknown'
+            isDirectStream: format !== 'embed'
           });
         }
       }

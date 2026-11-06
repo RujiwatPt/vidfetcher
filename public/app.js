@@ -59,6 +59,8 @@
   const probeSize = document.getElementById('probeSize');
   const probeRanges = document.getElementById('probeRanges');
   const probeHeadersCode = document.getElementById('probeHeadersCode');
+  const modalDownloadBtn = document.getElementById('modalDownloadBtn');
+  const downloadAllBtn = document.getElementById('downloadAllBtn');
 
   // History elements
   const historySection = document.getElementById('historySection');
@@ -110,6 +112,9 @@
 
     // History clear
     clearHistoryBtn.addEventListener('click', clearHistory);
+
+    // Export / Download all video URLs
+    downloadAllBtn?.addEventListener('click', handleExportAllUrls);
 
     // Filter tabs
     document.querySelectorAll('.tab-btn').forEach((btn) => {
@@ -300,6 +305,14 @@
     const resolutionPill = video.resolution ? `<span class="pill pill-res">${escapeHtml(video.resolution)}</span>` : '';
     const sourceLabel = formatSourceLabel(video.sourceType);
 
+    // Suggested sanitized filename
+    const cleanTitle = (video.title || 'video')
+      .replace(/[^a-zA-Z0-9_-]/g, '_')
+      .replace(/_+/g, '_')
+      .slice(0, 45);
+    const ext = video.format === 'm3u8' ? 'm3u8' : (video.format === 'webm' ? 'webm' : (video.format === 'mov' ? 'mov' : 'mp4'));
+    const suggestedFilename = `${cleanTitle}.${ext}`;
+
     // Media Player Container HTML
     const mediaContainerId = `player-container-${index}`;
 
@@ -331,26 +344,60 @@
         <div class="card-actions">
           ${
             video.isDirectStream
-              ? `<a href="/api/proxy?url=${encodeURIComponent(video.url)}&referer=${encodeURIComponent(currentExtractionData?.metadata?.finalUrl || '')}&download=1"
-                    class="btn btn-primary"
-                    download>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+              ? `<a href="/api/proxy?url=${encodeURIComponent(video.url)}&referer=${encodeURIComponent(currentExtractionData?.metadata?.finalUrl || '')}&download=1&filename=${encodeURIComponent(getFilenameForVideo(video))}"
+                    class="btn btn-primary download-btn"
+                    download="${escapeHtml(getFilenameForVideo(video))}"
+                    title="Download video file via high-speed proxy (bypasses CORS & Referer restrictions)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                       <polyline points="7 10 12 15 17 10"></polyline>
                       <line x1="12" y1="15" x2="12" y2="3"></line>
                     </svg>
-                    Download
+                    ${video.format === 'm3u8' ? 'Download M3U8 Playlist' : 'Download Video'}
+                 </a>
+                 ${
+                   video.format === 'm3u8'
+                     ? `<button class="btn btn-secondary ffmpeg-btn" data-url="${escapeHtml(video.url)}" title="Copy ffmpeg command to convert and download full MP4 from this HLS stream">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                            <polyline points="4 17 10 11 4 5"></polyline>
+                            <line x1="12" y1="19" x2="20" y2="19"></line>
+                          </svg>
+                          ffmpeg CMD
+                        </button>`
+                     : ''
+                 }
+                 <a href="${escapeHtml(video.url)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary direct-link-btn" title="Open direct media URL in new tab">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                      <polyline points="15 3 21 3 21 9"></polyline>
+                      <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                    Direct Link
                  </a>`
-              : ''
+              : `<a href="${escapeHtml(video.embedInfo?.embedUrl || video.url)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary download-btn" title="Open embed player in new window">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                      <polyline points="15 3 21 3 21 9"></polyline>
+                      <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                    Open Player
+                 </a>
+                 <button class="btn btn-secondary ytdlp-btn" data-url="${escapeHtml(video.url)}" title="Copy yt-dlp command to download this video">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                      <polyline points="4 17 10 11 4 5"></polyline>
+                      <line x1="12" y1="19" x2="20" y2="19"></line>
+                    </svg>
+                    yt-dlp CMD
+                 </button>`
           }
-          <button class="btn btn-secondary copy-btn" data-url="${escapeHtml(video.url)}">
+          <button class="btn btn-secondary copy-btn" data-url="${escapeHtml(video.url)}" title="Copy video stream URL to clipboard">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
             </svg>
             Copy URL
           </button>
-          <button class="btn btn-secondary probe-btn" data-url="${escapeHtml(video.url)}">
+          <button class="btn btn-secondary probe-btn" data-url="${escapeHtml(video.url)}" title="Inspect HTTP headers, size, and status">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
               <circle cx="12" cy="12" r="10"></circle>
               <line x1="12" y1="16" x2="12" y2="12"></line>
@@ -366,6 +413,20 @@
     const copyBtn = card.querySelector('.copy-btn');
     copyBtn?.addEventListener('click', () => {
       copyToClipboard(video.url);
+    });
+
+    const ffmpegBtn = card.querySelector('.ffmpeg-btn');
+    ffmpegBtn?.addEventListener('click', () => {
+      const cmd = `ffmpeg -i "${video.url}" -c copy -bsf:a aac_adtstoasc "video.mp4"`;
+      copyToClipboard(cmd);
+      showToast('ffmpeg command copied! Run in terminal to save full MP4.');
+    });
+
+    const ytdlpBtn = card.querySelector('.ytdlp-btn');
+    ytdlpBtn?.addEventListener('click', () => {
+      const cmd = `yt-dlp "${video.url}"`;
+      copyToClipboard(cmd);
+      showToast('yt-dlp command copied! Run in terminal to download.');
     });
 
     const probeBtn = card.querySelector('.probe-btn');
@@ -503,6 +564,10 @@
 
     try {
       const referer = currentExtractionData?.metadata?.finalUrl || '';
+      if (modalDownloadBtn) {
+        modalDownloadBtn.href = `/api/proxy?url=${encodeURIComponent(url)}&referer=${encodeURIComponent(referer)}&download=1`;
+      }
+
       const res = await fetch(`/api/probe?url=${encodeURIComponent(url)}&referer=${encodeURIComponent(referer)}`);
       const data = await res.json();
 
@@ -525,6 +590,44 @@
       probeStatus.style.color = 'var(--danger)';
       probeHeadersCode.textContent = String(err);
     }
+  }
+
+  function handleExportAllUrls() {
+    if (!currentExtractionData || !currentExtractionData.videos.length) {
+      showToast('No videos available to export.');
+      return;
+    }
+    const meta = currentExtractionData.metadata;
+    const lines = [
+      `# VideoFetcher URL Export`,
+      `# Page Title: ${meta.title || 'Untitled'}`,
+      `# Page URL: ${meta.finalUrl || meta.requestedUrl}`,
+      `# Extracted At: ${new Date().toISOString()}`,
+      `# Total Discovered Videos: ${currentExtractionData.videos.length}`,
+      ``,
+      `# List of Video Stream URLs (importable into IDM / JDownloader / aria2):`,
+      ``
+    ];
+
+    currentExtractionData.videos.forEach((v, i) => {
+      lines.push(`${i + 1}. [${(v.format || 'unknown').toUpperCase()}] ${v.title || 'Video'}`);
+      lines.push(`   URL: ${v.url}`);
+      lines.push(`   Source: ${v.sourceType} (${v.confidence}% confidence)`);
+      if (v.resolution) lines.push(`   Resolution: ${v.resolution}`);
+      lines.push(``);
+    });
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = `videofetcher_links_${Date.now()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(blobUrl);
+
+    showToast(`Exported ${currentExtractionData.videos.length} video URLs to .txt!`);
   }
 
   function closeModal() {

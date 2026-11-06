@@ -77,7 +77,10 @@ export class ProxyService {
 
       // If user clicked "Download", attach Content-Disposition
       if (isDownload) {
-        const filename = forcedFilename || this.sanitizeFilename(parsedUrl.pathname) || 'video.mp4';
+        const contentType = responseHeaders.get('content-type');
+        const filename = forcedFilename
+          ? this.sanitizeFilename(forcedFilename, contentType)
+          : this.sanitizeFilename(parsedUrl.pathname, contentType);
         responseHeaders.set('Content-Disposition', `attachment; filename="${filename}"`);
       }
 
@@ -92,11 +95,29 @@ export class ProxyService {
     }
   }
 
-  private static sanitizeFilename(path: string): string {
-    const segments = path.split('/');
-    const last = segments[segments.length - 1];
-    if (!last) return 'video.mp4';
-    const clean = last.replace(/[^a-zA-Z0-9._-]/g, '_');
-    return clean || 'video.mp4';
+  private static sanitizeFilename(path: string, contentType?: string | null): string {
+    const raw = path.split('?')[0] || 'video';
+    const segments = raw.split('/').filter(Boolean);
+    let last = segments.pop() || 'video';
+    let clean = last.replace(/[^a-zA-Z0-9._-]/g, '_').trim();
+    if (!clean) clean = 'video';
+
+    // Check if filename already has a recognized video extension
+    const hasExt = /\.(mp4|webm|m3u8|mpd|mov|ogg|mkv|ts|flv|avi)$/i.test(clean);
+    if (!hasExt) {
+      const ext = this.extensionFromMime(contentType);
+      clean = `${clean}.${ext}`;
+    }
+    return clean;
+  }
+
+  private static extensionFromMime(contentType?: string | null): string {
+    const lower = (contentType || '').toLowerCase();
+    if (lower.includes('mpegurl') || lower.includes('x-mpegurl')) return 'm3u8';
+    if (lower.includes('dash+xml')) return 'mpd';
+    if (lower.includes('webm')) return 'webm';
+    if (lower.includes('ogg')) return 'ogg';
+    if (lower.includes('quicktime')) return 'mov';
+    return 'mp4';
   }
 }

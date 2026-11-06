@@ -140,18 +140,30 @@
         <!-- Page Summary Card -->
         <div class="card page-summary-card">
           <div class="summary-header">
-            <div class="page-title-row">
-              <img id="pageFavicon" src="" alt="" class="favicon" onerror="this.style.display='none'">
-              <h2 id="pageTitle" class="page-title">Page Title</h2>
+            <div class="summary-title-col">
+              <div class="page-title-row">
+                <img id="pageFavicon" src="" alt="" class="favicon" onerror="this.style.display='none'">
+                <h2 id="pageTitle" class="page-title">Page Title</h2>
+              </div>
+              <a id="pageLink" href="#" target="_blank" rel="noopener noreferrer" class="final-url-link">
+                <span id="pageFinalUrl">https://...</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                  <polyline points="15 3 21 3 21 9"></polyline>
+                  <line x1="10" y1="14" x2="21" y2="3"></line>
+                </svg>
+              </a>
             </div>
-            <a id="pageLink" href="#" target="_blank" rel="noopener noreferrer" class="final-url-link">
-              <span id="pageFinalUrl">https://...</span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                <polyline points="15 3 21 3 21 9"></polyline>
-                <line x1="10" y1="14" x2="21" y2="3"></line>
-              </svg>
-            </a>
+            <div class="summary-actions">
+              <button id="downloadAllBtn" class="btn btn-secondary download-all-btn" title="Download text file with all discovered video links">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span>Export All URLs (.txt)</span>
+              </button>
+            </div>
           </div>
 
           <p id="pageDescription" class="page-description"></p>
@@ -254,6 +266,14 @@
           </div>
         </div>
         <div class="modal-footer">
+          <a id="modalDownloadBtn" href="#" class="btn btn-primary" download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Download Video
+          </a>
           <button id="closeModalFooterBtn" class="btn btn-secondary">Close</button>
         </div>
       </div>

@@ -122,7 +122,7 @@ export class HTML5VideoExtractor implements IExtractor {
             thumbnail: posterUrl || context.pageThumbnail,
             confidence: 95,
             context: 'Direct <video src="..."> element',
-            isDirectStream: format !== 'embed' && format !== 'unknown'
+            isDirectStream: format !== 'embed'
           });
         }
       }
@@ -143,7 +143,7 @@ export class HTML5VideoExtractor implements IExtractor {
             thumbnail: posterUrl || context.pageThumbnail,
             confidence: 90,
             context: `<video ${attrName}="..."> lazy/data attribute`,
-            isDirectStream: format !== 'embed' && format !== 'unknown'
+            isDirectStream: format !== 'embed'
           });
         }
       }
@@ -166,7 +166,7 @@ export class HTML5VideoExtractor implements IExtractor {
               thumbnail: posterUrl || context.pageThumbnail,
               confidence: 95,
               context: `<source src="..." type="${s.type || 'unknown'}"> element`,
-              isDirectStream: format !== 'embed' && format !== 'unknown'
+              isDirectStream: format !== 'embed'
             });
           }
         }
@@ -187,7 +187,7 @@ export class HTML5VideoExtractor implements IExtractor {
               thumbnail: posterUrl || context.pageThumbnail,
               confidence: 85,
               context: `<source ${attrName}="..."> lazy attribute`,
-              isDirectStream: format !== 'embed' && format !== 'unknown'
+              isDirectStream: format !== 'embed'
             });
           }
         }

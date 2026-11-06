@@ -91,7 +91,7 @@ export class MetaTagExtractor implements IExtractor {
             thumbnail: ogImage || context.pageThumbnail,
             confidence: 85,
             context: `OpenGraph meta tag <meta property="${m.property}" content="...">`,
-            isDirectStream: format !== 'embed' && format !== 'unknown'
+            isDirectStream: format !== 'embed'
           });
         }
       }
@@ -116,7 +116,7 @@ export class MetaTagExtractor implements IExtractor {
             thumbnail: ogImage || context.pageThumbnail,
             confidence: isStream ? 85 : 70,
             context: `Twitter Card meta tag <meta name="${m.name}" content="...">`,
-            isDirectStream: format !== 'embed' && format !== 'unknown'
+            isDirectStream: format !== 'embed'
           });
         }
       }
@@ -137,7 +137,7 @@ export class MetaTagExtractor implements IExtractor {
           thumbnail: context.pageThumbnail,
           confidence: 80,
           context: `<link rel="video_src" href="...">`,
-          isDirectStream: format !== 'embed' && format !== 'unknown'
+          isDirectStream: format !== 'embed'
         });
       }
     }

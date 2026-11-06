@@ -455,9 +455,36 @@ body {
 
 .summary-header {
   display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.summary-title-col {
+  display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  margin-bottom: 1rem;
+  flex: 1;
+  min-width: 250px;
+}
+
+.summary-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.download-all-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: var(--radius-md);
 }
 
 .page-title-row {
@@ -734,6 +761,7 @@ body {
 /* Card Action Buttons */
 .card-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: auto;
   padding-top: 0.75rem;
@@ -741,14 +769,29 @@ body {
 }
 
 .card-actions .btn {
-  flex: 1;
-  padding: 0.55rem 0.75rem;
-  font-size: 0.825rem;
+  flex: 1 1 calc(50% - 0.25rem);
+  padding: 0.55rem 0.65rem;
+  font-size: 0.8rem;
   font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
+  text-decoration: none;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.card-actions .btn-primary.download-btn {
+  flex: 1 1 100%;
+  padding: 0.7rem 1rem;
+  font-size: 0.875rem;
+  gap: 0.5rem;
+  letter-spacing: 0.01em;
+}
+
+.card-actions .btn svg {
+  flex-shrink: 0;
 }
 
 /* Raw Inspector Panel */
@@ -927,6 +970,8 @@ body {
   border-top: 1px solid var(--border-color);
   display: flex;
   justify-content: flex-end;
+  gap: 0.75rem;
+  align-items: center;
 }
 
 /* Toast */

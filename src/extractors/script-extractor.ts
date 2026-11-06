@@ -115,7 +115,7 @@ export class ScriptStreamExtractor implements IExtractor {
       thumbnail: context.pageThumbnail,
       confidence,
       context: contextDescription,
-      isDirectStream: format !== 'embed' && format !== 'unknown'
+      isDirectStream: format !== 'embed'
     });
   }
 
