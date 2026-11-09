@@ -748,14 +748,55 @@ body {
   word-break: break-all;
 }
 
+.url-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.url-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.url-copy-link {
+  background: none;
+  border: none;
+  color: var(--accent-primary);
+  font-size: 0.7rem;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.url-copy-link:hover {
+  text-decoration: underline;
+}
+
 .url-preview-row {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
+  font-size: 0.775rem;
+  color: var(--text-primary);
   font-family: var(--font-mono);
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  padding: 0.5rem 0.65rem;
+  border-radius: var(--radius-sm);
   word-break: break-all;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  line-height: 1.45;
+  user-select: all;
+  max-height: 120px;
+  overflow-y: auto;
 }
 
 /* Card Action Buttons */

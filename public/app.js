@@ -332,8 +332,12 @@
           ${escapeHtml(video.context)}
         </div>
 
-        <div class="url-preview-row" title="${escapeHtml(video.url)}">
-          ${escapeHtml(video.url)}
+        <div class="url-container">
+          <div class="url-header-row">
+            <span>Video Stream URL</span>
+            <button type="button" class="url-copy-link" data-url="${escapeHtml(video.url)}" title="Copy full URL to clipboard">Copy</button>
+          </div>
+          <div class="url-preview-row" title="Full video URL (Click to select all)">${escapeHtml(video.url)}</div>
         </div>
 
         <div class="card-actions">
@@ -405,6 +409,22 @@
     `;
 
     // Attach card event listeners
+    const urlCopyLink = card.querySelector('.url-copy-link');
+    urlCopyLink?.addEventListener('click', () => {
+      copyToClipboard(video.url);
+    });
+
+    const urlPreviewRow = card.querySelector('.url-preview-row');
+    urlPreviewRow?.addEventListener('click', () => {
+      if (window.getSelection && document.createRange) {
+        const sel = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(urlPreviewRow);
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+      }
+    });
+
     const copyBtn = card.querySelector('.copy-btn');
     copyBtn?.addEventListener('click', () => {
       copyToClipboard(video.url);
