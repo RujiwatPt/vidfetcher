@@ -273,45 +273,6 @@ body {
   min-width: 160px;
 }
 
-/* Samples */
-.samples-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  font-size: 0.875rem;
-}
-
-.samples-label {
-  color: var(--text-muted);
-  font-weight: 500;
-}
-
-.samples-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.sample-chip {
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  color: var(--text-secondary);
-  padding: 0.35rem 0.85rem;
-  border-radius: var(--radius-full);
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.sample-chip:hover {
-  background-color: var(--bg-card-hover);
-  color: var(--accent-primary);
-  border-color: var(--accent-primary);
-  transform: translateY(-1px);
-}
-
 /* History Bar */
 .history-section {
   max-width: 850px;

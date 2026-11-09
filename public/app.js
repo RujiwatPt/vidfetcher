@@ -99,17 +99,6 @@
     // Theme toggle
     themeToggleBtn.addEventListener('click', toggleTheme);
 
-    // Preset sample chips
-    document.querySelectorAll('.sample-chip').forEach((chip) => {
-      chip.addEventListener('click', () => {
-        const url = chip.getAttribute('data-url');
-        if (url) {
-          urlInput.value = url;
-          fetchVideos(url);
-        }
-      });
-    });
-
     // History clear
     clearHistoryBtn.addEventListener('click', clearHistory);
 
